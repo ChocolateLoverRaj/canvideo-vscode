@@ -102,3 +102,10 @@ dist
 
 # TernJS port file
 .tern-port
+
+# Idk
+.vscode-test-web
+
+# Don't have lock files
+package-lock.json
+pnpm-lock.yaml
