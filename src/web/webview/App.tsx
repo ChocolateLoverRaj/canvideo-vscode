@@ -1,5 +1,5 @@
 import { FC } from 'react'
 
-const App: FC = () => <>Appff</>
+const App: FC = () => <>Appf</>
 
 export default App
