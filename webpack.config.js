@@ -51,11 +51,21 @@ const webExtensionConfig = {
       exclude: /node_modules/,
       use: 'html-loader'
     }, {
-      test: /.ts$/,
-      use: 'ts-loader',
-      issuer: /\.html$/,
-      type: 'asset'
-    }]
+      test: /\webpack\.config\..+$/,
+      use: './webpackLoader.js',
+      type: 'asset/inline'
+    }
+    // {
+    //   test: /webpack\.config\..*/,
+    //   issuer: /\.html$/,
+    //   type: 'asset',
+    //   generator: {
+    //     dataUrl: {
+    //       mimetype: 'application/javascript'
+    //     }
+    //   }
+    // }
+    ]
   },
   plugins: [
     new webpack.ProvidePlugin({

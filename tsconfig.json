@@ -5,12 +5,14 @@
 		"outDir": "dist",
 		"lib": [
 			"es6",
-			"WebWorker"
+			"WebWorker",
+			"DOM"
 		],
 		"sourceMap": true,
 		"rootDir": "src",
 		"strict": true,
-		"esModuleInterop": true
+		"esModuleInterop": true,
+		"jsx": "preserve"
 	},
 	"exclude": [
 		"node_modules",
