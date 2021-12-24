@@ -76,6 +76,7 @@
 		"webpack-cli": "^4.8.0"
 	},
 	"dependencies": {
+		"@vscode/webview-ui-toolkit": "^0.8.4",
 		"mobx": "^6.3.10",
 		"mobx-react-lite": "^3.2.2",
 		"path": "^0.12.7",
