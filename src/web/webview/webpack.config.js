@@ -23,7 +23,7 @@ module.exports = {
   },
   module: {
     rules: [{
-      test: /\.tsx$/,
+      test: /\.tsx?$/,
       exclude: /node_modules/,
       use: {
         loader: 'babel-loader',
@@ -32,13 +32,7 @@ module.exports = {
           plugins: ['react-require']
         }
       }
-    } /*  {
-      test: /\.tsx?$/,
-      exclude: /node_modules/,
-      use: [{
-        loader: 'ts-loader'
-      }]
-    } */]
+    }]
   },
   plugins: [
     new webpack.ProvidePlugin({

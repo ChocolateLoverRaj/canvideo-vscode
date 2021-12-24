@@ -5,7 +5,10 @@
         "sourceType": "module",
         "project": "./tsconfig.json"
     },
-    "extends": "standard-with-typescript",
+    "extends": [
+        "standard-with-typescript",
+        "standard-jsx"
+    ],
     "ignorePatterns": [
         "**/*.d.ts",
         "dist"

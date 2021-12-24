@@ -19,7 +19,8 @@ module.exports = function (content, map, meta) {
   compiler.run((err, stats) => {
     if (err) return callback(err, content, map, meta)
     if (stats.hasErrors()) return callback(stats.compilation.errors, content, map, meta)
-    callback(null, fs.readFileSync(join(outputPath, outputFile)), map, meta)
+    this.clearDependencies()
     stats.compilation.fileDependencies.forEach(file => this.addDependency(file))
+    callback(null, fs.readFileSync(join(outputPath, outputFile)), map, meta)
   })
 }
