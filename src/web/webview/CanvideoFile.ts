@@ -1,7 +1,8 @@
-import { makeObservable, observable, computed, action } from 'mobx'
+import { makeObservable, observable, computed, action, autorun, runInAction } from 'mobx'
 import { MessageToVscode, MessageToVscodeType, MessageToWebview, MessageToWebviewType } from '../Messages'
-
-const vscode = acquireVsCodeApi()
+import { FileExistsState } from './FileExists'
+import fileExistsStore from './fileExistsStore'
+import vscode from './vscode'
 
 class CanvideoFile {
   _contents = ''
@@ -15,9 +16,18 @@ class CanvideoFile {
     addEventListener('message', action((e: MessageEvent<MessageToWebview>) => {
       const { data, type } = e.data
       if (type === MessageToWebviewType.CHANGED) {
-        this._contents = data
+        this._contents = data as string
       }
     }))
+
+    autorun(() => {
+      if (this.goodExtension) fileExistsStore.check()
+      else {
+        runInAction(() => {
+          fileExistsStore.state = FileExistsState.INVALID_URI
+        })
+      }
+    })
   }
 
   get contents (): string {
@@ -30,7 +40,10 @@ class CanvideoFile {
       data: contents
     }
     vscode.postMessage(message)
-    this._contents = contents
+  }
+
+  get goodExtension (): boolean {
+    return this.contents.endsWith('.js')
   }
 }
 

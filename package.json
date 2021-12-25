@@ -33,6 +33,12 @@
 			}
 		]
 	},
+	"capabilities": {
+		"untrustedWorkspaces": {
+			"supported": "limited",
+			"description": "Eval-ing js files is only supported in trusted workspaces"
+		}
+	},
 	"scripts": {
 		"test": "vscode-test-web --browserType=chromium --extensionDevelopmentPath=. --extensionTestsPath=dist/web/test/suite/index.js",
 		"pretest": "npm run compile-web",
@@ -76,6 +82,7 @@
 		"webpack-cli": "^4.8.0"
 	},
 	"dependencies": {
+		"@emotion/css": "^11.7.1",
 		"@vscode/webview-ui-toolkit": "^0.8.4",
 		"mobx": "^6.3.10",
 		"mobx-react-lite": "^3.2.2",

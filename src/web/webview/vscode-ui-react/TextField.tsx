@@ -1,8 +1,14 @@
-import { DetailedHTMLProps, InputHTMLAttributes, forwardRef, useRef, useEffect, useLayoutEffect } from 'react'
+import { DetailedHTMLProps, InputHTMLAttributes, forwardRef, useRef, useEffect, useLayoutEffect, ReactNode } from 'react'
 
-const TextField = forwardRef<HTMLInputElement, DetailedHTMLProps<InputHTMLAttributes<HTMLInputElement>, HTMLInputElement>>(({
+export interface TextFieldProps extends DetailedHTMLProps<InputHTMLAttributes<HTMLInputElement>, HTMLInputElement> {
+  endIcon?: ReactNode
+}
+
+const TextField = forwardRef<HTMLInputElement, TextFieldProps>(({
   onChange,
   value,
+  children,
+  endIcon,
   ...restProps
 }, givenRef) => {
   const ref = givenRef ?? useRef<HTMLInputElement>(null)
@@ -20,7 +26,10 @@ const TextField = forwardRef<HTMLInputElement, DetailedHTMLProps<InputHTMLAttrib
       ref={ref}
       value={value}
       {...restProps as any}
-    />
+    >
+      {children}
+      {Boolean(endIcon) && <span slot='end'>{endIcon}</span>}
+    </vscode-text-field>
   )
 })
 
