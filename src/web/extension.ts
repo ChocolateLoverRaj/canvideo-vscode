@@ -2,6 +2,7 @@
 // Import the module and reference it with the alias vscode in your code below
 import * as vscode from 'vscode'
 import { CustomTextEditorProvider } from 'vscode'
+import { MessageToVscode, MessageToVscodeType, MessageToWebview, MessageToWebviewType } from './Messages'
 import webviewHtml from './webview/webview.html'
 
 // this method is called when your extension is activated
@@ -24,19 +25,25 @@ export function activate (context: vscode.ExtensionContext): void {
   const editorProvider: CustomTextEditorProvider = {
     resolveCustomTextEditor: async (document, webviewPanel, token) => {
       const sendUpdatedDocument = async (): Promise<void> => {
-        await webviewPanel.webview.postMessage(document.getText())
+        const message: MessageToWebview = {
+          type: MessageToWebviewType.CHANGED,
+          data: document.getText()
+        }
+        await webviewPanel.webview.postMessage(message)
       }
 
       webviewPanel.webview.options = {
         enableScripts: true
       }
       webviewPanel.webview.html = webviewHtml
-      webviewPanel.webview.onDidReceiveMessage(async newText => {
+      webviewPanel.webview.onDidReceiveMessage(async ({ data, type }: MessageToVscode) => {
+        if (type === MessageToVscodeType.EDIT) {
         // Just replace the entire document every time for this example extension.
         // A more complete extension should compute minimal edits instead.
-        const edit = new vscode.WorkspaceEdit()
-        edit.replace(document.uri, new vscode.Range(0, 0, document.lineCount, 0), newText)
-        await vscode.workspace.applyEdit(edit)
+          const edit = new vscode.WorkspaceEdit()
+          edit.replace(document.uri, new vscode.Range(0, 0, document.lineCount, 0), data)
+          await vscode.workspace.applyEdit(edit)
+        }
       })
 
       // Hook up event handlers so that we can synchronize the webview with the text document.
