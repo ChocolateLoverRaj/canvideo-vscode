@@ -5,7 +5,8 @@ export interface Message<T, D> {
 
 export enum MessageToWebviewType {
   CHANGED,
-  CHECK_FILE_RESULT
+  CHECK_FILE_RESULT,
+  READ_FILE_RESULT
 }
 
 export type ChangedMessage = Message<MessageToWebviewType.CHANGED, string>
@@ -18,15 +19,20 @@ export enum CheckFileResult {
 
 export type CheckFileResultMessage = Message<MessageToWebviewType.CHECK_FILE_RESULT, CheckFileResult>
 
-export type MessageToWebview = ChangedMessage | CheckFileResultMessage
+export type ReadFileResultMessage = Message<MessageToWebviewType.READ_FILE_RESULT, Uint8Array | undefined>
+
+export type MessageToWebview = ChangedMessage | CheckFileResultMessage | ReadFileResultMessage
 
 export enum MessageToVscodeType {
   EDIT,
-  CHECK_FILE_EXISTS
+  CHECK_FILE_SUBSCRIBE,
+  READ_FILE_SUBSCRIBE
 }
 
 export type EditMessage = Message<MessageToVscodeType.EDIT, string>
 
-export type CheckFileExistsMessage = Message<MessageToVscodeType.CHECK_FILE_EXISTS, undefined>
+export type CheckFileExistsMessage = Message<MessageToVscodeType.CHECK_FILE_SUBSCRIBE, boolean>
 
-export type MessageToVscode = EditMessage | CheckFileExistsMessage
+export type ReadFileSubscribeMessage = Message<MessageToVscodeType.READ_FILE_SUBSCRIBE, boolean>
+
+export type MessageToVscode = EditMessage | CheckFileExistsMessage | ReadFileSubscribeMessage

@@ -1,13 +1,8 @@
-import { action, makeObservable, observable } from 'mobx'
+import { action, createAtom } from 'mobx'
 import { CheckFileResult, MessageToVscode, MessageToVscodeType, MessageToWebview, MessageToWebviewType } from '../Messages'
 import vscode from './vscode'
 
 export enum FileExistsState {
-  INITIAL,
-  /**
-   * If file doesn't end with `.js`, don't even check
-   */
-  INVALID_URI,
   CHECKING,
   DIRECTORY,
   FILE,
@@ -15,32 +10,40 @@ export enum FileExistsState {
 }
 
 class FileExists {
-  state = FileExistsState.INITIAL
+  _state = FileExistsState.CHECKING
 
-  constructor () {
-    makeObservable(this, {
-      state: observable,
-      check: action
+  readonly messageHandler = action(({ data: { type, data } }: MessageEvent<MessageToWebview>) => {
+    if (type === MessageToWebviewType.CHECK_FILE_RESULT) {
+      this._state = data === CheckFileResult.FILE
+        ? FileExistsState.FILE
+        : data === CheckFileResult.NO_EXIST
+          ? FileExistsState.NO_EXIST
+          : FileExistsState.DIRECTORY
+      this.atom.reportChanged()
+    }
+  })
+
+  readonly atom = createAtom(FileExists.name,
+    () => {
+      addEventListener('message', this.messageHandler)
+      const message: MessageToVscode = {
+        type: MessageToVscodeType.CHECK_FILE_SUBSCRIBE,
+        data: true
+      }
+      vscode.postMessage(message)
+    },
+    () => {
+      removeEventListener('message', this.messageHandler)
+      const message: MessageToVscode = {
+        type: MessageToVscodeType.CHECK_FILE_SUBSCRIBE,
+        data: false
+      }
+      vscode.postMessage(message)
     })
 
-    addEventListener('message', action(({ data: { type, data } }: MessageEvent<MessageToWebview>) => {
-      if (type === MessageToWebviewType.CHECK_FILE_RESULT) {
-        this.state = data === CheckFileResult.FILE
-          ? FileExistsState.FILE
-          : data === CheckFileResult.NO_EXIST
-            ? FileExistsState.NO_EXIST
-            : FileExistsState.DIRECTORY
-      }
-    }))
-  }
-
-  check (): void {
-    const message: MessageToVscode = {
-      type: MessageToVscodeType.CHECK_FILE_EXISTS,
-      data: undefined
-    }
-    vscode.postMessage(message)
-    this.state = FileExistsState.CHECKING
+  get state (): FileExistsState {
+    this.atom.reportObserved()
+    return this._state
   }
 }
 

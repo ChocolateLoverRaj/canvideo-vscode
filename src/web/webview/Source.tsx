@@ -5,10 +5,16 @@ import { css } from '@emotion/css'
 import fileExistsStore from './fileExistsStore'
 import { FileExistsState } from './FileExists'
 import { ReactNode } from 'react'
+import isGoodSourceExtension from './isGoodSourceExtension'
 
 interface ValidationFeedback {
   icon: ReactNode
   message?: ReactNode
+}
+
+const badUriValidation: ValidationFeedback = {
+  icon: '\u{274C}',
+  message: <>File must end in <code>.js</code></>
 }
 
 const fileExistsStateValidation: Partial<Record<FileExistsState, ValidationFeedback>> = {
@@ -22,10 +28,6 @@ const fileExistsStateValidation: Partial<Record<FileExistsState, ValidationFeedb
   [FileExistsState.CHECKING]: {
     icon: 'Checking'
   },
-  [FileExistsState.INVALID_URI]: {
-    icon: '\u{274C}',
-    message: <>File must end in <code>.js</code></>
-  },
   [FileExistsState.NO_EXIST]: {
     icon: '\u{274C}',
     message: "That file doesn't exist"
@@ -33,7 +35,9 @@ const fileExistsStateValidation: Partial<Record<FileExistsState, ValidationFeedb
 }
 
 const Source = observer(() => {
-  const validation = fileExistsStateValidation[fileExistsStore.state]
+  const validation = isGoodSourceExtension(canvideoFileStore.contents)
+    ? fileExistsStateValidation[fileExistsStore.state]
+    : badUriValidation
 
   return (
     <>

@@ -2,9 +2,10 @@
 // Import the module and reference it with the alias vscode in your code below
 import * as vscode from 'vscode'
 import { CustomTextEditorProvider } from 'vscode'
-import { CheckFileResult, MessageToVscode, MessageToVscodeType, MessageToWebview, MessageToWebviewType } from './Messages'
+import { CheckFileResult, CheckFileResultMessage, MessageToVscode, MessageToVscodeType, MessageToWebview, MessageToWebviewType, ReadFileResultMessage } from './Messages'
 import webviewHtml from './webview/webview.html'
 import { resolve, dirname } from 'path'
+import Watcher, { WatchCallback as WatcherCallback } from './Watcher'
 
 // this method is called when your extension is activated
 // your extension is activated the very first time the command is executed
@@ -33,6 +34,74 @@ export function activate (context: vscode.ExtensionContext): void {
         await webviewPanel.webview.postMessage(message)
       }
 
+      const getFileUri = (): vscode.Uri => {
+        const path = resolve(dirname(document.uri.path), document.getText())
+        return document.uri.with({ path })
+      }
+
+      const watcher = new Watcher(getFileUri().fsPath)
+
+      const sendFileExists = async (): Promise<void> => {
+        let stats
+        try {
+          stats = await vscode.workspace.fs.stat(getFileUri())
+        } catch (e: any) {
+          if (e.code === 'FileNotFound') {
+            const message: MessageToWebview = {
+              type: MessageToWebviewType.CHECK_FILE_RESULT,
+              data: CheckFileResult.NO_EXIST
+            }
+            await webviewPanel.webview.postMessage(message)
+          } else throw e
+        }
+        if (stats !== undefined) {
+          const message: MessageToWebview = {
+            type: MessageToWebviewType.CHECK_FILE_RESULT,
+            data: stats.type === vscode.FileType.File
+              ? CheckFileResult.FILE
+              : CheckFileResult.DIRECTORY
+          }
+          await webviewPanel.webview.postMessage(message)
+        }
+      }
+
+      const fileExistsCallback: WatcherCallback = watcher => {
+        watcher.onDidCreate(async () => {
+          await sendFileExists()
+        })
+        watcher.onDidDelete(async () => {
+          const message: CheckFileResultMessage = {
+            type: MessageToWebviewType.CHECK_FILE_RESULT,
+            data: CheckFileResult.NO_EXIST
+          }
+          await webviewPanel.webview.postMessage(message)
+        })
+      }
+
+      const sendFile = async (): Promise<void> => {
+        const message: MessageToWebview = {
+          type: MessageToWebviewType.READ_FILE_RESULT,
+          data: await vscode.workspace.fs.readFile(getFileUri())
+        }
+        await webviewPanel.webview.postMessage(message)
+      }
+
+      const sendFileCallback: WatcherCallback = watcher => {
+        watcher.onDidCreate(async () => {
+          await sendFile()
+        })
+        watcher.onDidChange(async () => {
+          await sendFile()
+        })
+        watcher.onDidDelete(async () => {
+          const message: ReadFileResultMessage = {
+            type: MessageToWebviewType.READ_FILE_RESULT,
+            data: undefined
+          }
+          await webviewPanel.webview.postMessage(message)
+        })
+      }
+
       webviewPanel.webview.options = {
         enableScripts: true
       }
@@ -45,28 +114,19 @@ export function activate (context: vscode.ExtensionContext): void {
           const edit = new vscode.WorkspaceEdit()
           edit.replace(document.uri, new vscode.Range(0, 0, document.lineCount, 0), newContents)
           await vscode.workspace.applyEdit(edit)
-        } else if (type === MessageToVscodeType.CHECK_FILE_EXISTS) {
-          const path = resolve(dirname(document.uri.path), document.getText())
-          let stats
-          try {
-            stats = await vscode.workspace.fs.stat(document.uri.with({ path }))
-          } catch (e: any) {
-            if (e.code === 'FileNotFound') {
-              const message: MessageToWebview = {
-                type: MessageToWebviewType.CHECK_FILE_RESULT,
-                data: CheckFileResult.NO_EXIST
-              }
-              await webviewPanel.webview.postMessage(message)
-            } else throw e
+        } else if (type === MessageToVscodeType.CHECK_FILE_SUBSCRIBE) {
+          if (data as boolean) {
+            await sendFileExists()
+            watcher.add(fileExistsCallback)
+          } else {
+            watcher.delete(fileExistsCallback)
           }
-          if (stats !== undefined) {
-            const message: MessageToWebview = {
-              type: MessageToWebviewType.CHECK_FILE_RESULT,
-              data: stats.type === vscode.FileType.File
-                ? CheckFileResult.FILE
-                : CheckFileResult.DIRECTORY
-            }
-            await webviewPanel.webview.postMessage(message)
+        } else if (type === MessageToVscodeType.READ_FILE_SUBSCRIBE) {
+          if (data as boolean) {
+            await sendFile()
+            watcher.add(sendFileCallback)
+          } else {
+            watcher.delete(sendFileCallback)
           }
         }
       })
@@ -81,7 +141,12 @@ export function activate (context: vscode.ExtensionContext): void {
       const changeDocumentSubscription = vscode.workspace.onDidChangeTextDocument(async e => {
         // Check that this our document was the one that was changed
         if (e.document.uri.toString() === document.uri.toString()) {
-          await sendUpdatedDocument()
+          watcher.setPath(getFileUri().fsPath)
+          await Promise.all([
+            sendUpdatedDocument(),
+            sendFileExists(),
+            sendFile()
+          ])
         }
       })
 

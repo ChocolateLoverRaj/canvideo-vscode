@@ -1,7 +1,5 @@
-import { makeObservable, observable, computed, action, autorun, runInAction } from 'mobx'
+import { makeObservable, observable, computed, action } from 'mobx'
 import { MessageToVscode, MessageToVscodeType, MessageToWebview, MessageToWebviewType } from '../Messages'
-import { FileExistsState } from './FileExists'
-import fileExistsStore from './fileExistsStore'
 import vscode from './vscode'
 
 class CanvideoFile {
@@ -19,15 +17,6 @@ class CanvideoFile {
         this._contents = data as string
       }
     }))
-
-    autorun(() => {
-      if (this.goodExtension) fileExistsStore.check()
-      else {
-        runInAction(() => {
-          fileExistsStore.state = FileExistsState.INVALID_URI
-        })
-      }
-    })
   }
 
   get contents (): string {
@@ -40,10 +29,6 @@ class CanvideoFile {
       data: contents
     }
     vscode.postMessage(message)
-  }
-
-  get goodExtension (): boolean {
-    return this.contents.endsWith('.js')
   }
 }
 
