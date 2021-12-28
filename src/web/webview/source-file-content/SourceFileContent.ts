@@ -6,7 +6,7 @@ class SourceFileContent {
   _contents: string | undefined = undefined
 
   readonly messageHandler = ({ data: { type, data } }: MessageEvent<MessageToWebview>) => {
-    if (type === MessageToWebviewType.READ_FILE_RESULT) {
+    if (type === MessageToWebviewType.READ_SOURCE_FILE_RESULT) {
       if (data === undefined) {
         this._contents = undefined
       } else {
@@ -21,7 +21,7 @@ class SourceFileContent {
     () => {
       addEventListener('message', this.messageHandler)
       const message: MessageToVscode = {
-        type: MessageToVscodeType.READ_FILE_SUBSCRIBE,
+        type: MessageToVscodeType.READ_SOURCE_FILE_SUBSCRIBE,
         data: true
       }
       vscode.postMessage(message)
@@ -30,7 +30,7 @@ class SourceFileContent {
       this._contents = undefined
       removeEventListener('message', this.messageHandler)
       const message: MessageToVscode = {
-        type: MessageToVscodeType.READ_FILE_SUBSCRIBE,
+        type: MessageToVscodeType.READ_SOURCE_FILE_SUBSCRIBE,
         data: false
       }
       vscode.postMessage(message)

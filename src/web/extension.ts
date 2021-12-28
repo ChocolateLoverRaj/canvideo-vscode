@@ -28,7 +28,7 @@ export function activate (context: vscode.ExtensionContext): void {
     resolveCustomTextEditor: async (document, webviewPanel, token) => {
       const sendUpdatedDocument = async (): Promise<void> => {
         const message: MessageToWebview = {
-          type: MessageToWebviewType.CHANGED,
+          type: MessageToWebviewType.READ_FILE_FILE_RESULT,
           data: document.getText()
         }
         await webviewPanel.webview.postMessage(message)
@@ -80,7 +80,7 @@ export function activate (context: vscode.ExtensionContext): void {
 
       const sendFile = async (): Promise<void> => {
         const message: MessageToWebview = {
-          type: MessageToWebviewType.READ_FILE_RESULT,
+          type: MessageToWebviewType.READ_SOURCE_FILE_RESULT,
           data: await vscode.workspace.fs.readFile(getFileUri())
         }
         await webviewPanel.webview.postMessage(message)
@@ -95,12 +95,14 @@ export function activate (context: vscode.ExtensionContext): void {
         })
         watcher.onDidDelete(async () => {
           const message: ReadFileResultMessage = {
-            type: MessageToWebviewType.READ_FILE_RESULT,
+            type: MessageToWebviewType.READ_SOURCE_FILE_RESULT,
             data: undefined
           }
           await webviewPanel.webview.postMessage(message)
         })
       }
+
+      let subscribedToReadThisFile = false
 
       webviewPanel.webview.options = {
         enableScripts: true
@@ -121,12 +123,19 @@ export function activate (context: vscode.ExtensionContext): void {
           } else {
             watcher.delete(fileExistsCallback)
           }
-        } else if (type === MessageToVscodeType.READ_FILE_SUBSCRIBE) {
+        } else if (type === MessageToVscodeType.READ_SOURCE_FILE_SUBSCRIBE) {
           if (data as boolean) {
             await sendFile()
             watcher.add(sendFileCallback)
           } else {
             watcher.delete(sendFileCallback)
+          }
+        } else if (type === MessageToVscodeType.READ_THIS_FILE_SUBSCRIBE) {
+          if (data as boolean) {
+            subscribedToReadThisFile = true
+            await sendUpdatedDocument()
+          } else {
+            subscribedToReadThisFile = false
           }
         }
       })
@@ -143,9 +152,9 @@ export function activate (context: vscode.ExtensionContext): void {
         if (e.document.uri.toString() === document.uri.toString()) {
           watcher.setPath(getFileUri().fsPath)
           await Promise.all([
-            sendUpdatedDocument(),
-            sendFileExists(),
-            sendFile()
+            ...subscribedToReadThisFile ? [sendUpdatedDocument()] : [],
+            ...watcher.has(fileExistsCallback) ? [sendFileExists()] : [],
+            ...watcher.has(sendFileCallback) ? [sendFile()] : []
           ])
         }
       })

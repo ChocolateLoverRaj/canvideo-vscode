@@ -12,6 +12,11 @@ interface ValidationFeedback {
   message?: ReactNode
 }
 
+const loadingValidation: ValidationFeedback = {
+  icon: 'Loading',
+  message: 'Loading File'
+}
+
 const badUriValidation: ValidationFeedback = {
   icon: '\u{274C}',
   message: <>File must end in <code>.js</code></>
@@ -35,13 +40,17 @@ const fileExistsStateValidation: Partial<Record<FileExistsState, ValidationFeedb
 }
 
 const Source = observer(() => {
-  const validation = isGoodSourceExtension(canvideoFileStore.contents)
-    ? fileExistsStateValidation[fileExistsStore.state]
-    : badUriValidation
+  const loading = canvideoFileStore.contents !== undefined
+  const validation = loading
+    ? isGoodSourceExtension(canvideoFileStore.contents as string)
+      ? fileExistsStateValidation[fileExistsStore.state]
+      : badUriValidation
+    : loadingValidation
 
   return (
     <>
       <TextField
+        disabled={loading}
         value={canvideoFileStore.contents}
         onChange={e => {
           canvideoFileStore.contents = e.target.value
