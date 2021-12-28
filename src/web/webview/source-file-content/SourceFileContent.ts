@@ -11,8 +11,8 @@ class SourceFileContent {
         this._contents = undefined
       } else {
         this._contents = new TextDecoder().decode(data as Uint8Array)
-        this.atom.reportChanged()
       }
+      this.atom.reportChanged()
     }
   }
 
