@@ -40,8 +40,8 @@ const fileExistsStateValidation: Partial<Record<FileExistsState, ValidationFeedb
 }
 
 const Source = observer(() => {
-  const loading = canvideoFileStore.contents !== undefined
-  const validation = loading
+  const loaded = canvideoFileStore.contents !== undefined
+  const validation = loaded
     ? isGoodSourceExtension(canvideoFileStore.contents as string)
       ? fileExistsStateValidation[fileExistsStore.state]
       : badUriValidation
@@ -50,7 +50,7 @@ const Source = observer(() => {
   return (
     <>
       <TextField
-        disabled={loading}
+        disabled={!loaded}
         value={canvideoFileStore.contents}
         onChange={e => {
           canvideoFileStore.contents = e.target.value

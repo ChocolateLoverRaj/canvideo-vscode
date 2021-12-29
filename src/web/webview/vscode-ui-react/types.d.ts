@@ -1,9 +1,10 @@
-import { DetailedHTMLProps, InputHTMLAttributes } from 'react';
+import 'react';
 
 declare global {
   namespace JSX {
     interface IntrinsicElements  {
       'vscode-text-field': VscodeTextFieldAttributes
+      'vscode-button': any
     }
 
     interface VscodeTextFieldAttributes {

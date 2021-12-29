@@ -37,6 +37,9 @@ module.exports = {
       exclude: /node_modules/,
       issuer: path.resolve(__dirname, './module-to-web-worker/getWorkerScript.ts'),
       type: 'asset/source'
+    }, {
+      test: /\.css$/,
+      use: ['style-loader', 'css-loader']
     }]
   },
   plugins: [
