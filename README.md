@@ -1,3 +1,8 @@
+> [!CAUTION]
+> This project is abandoned. It doesn't do anything.
+
+Also did I fr make a Vscode extension for my animation maker before it could even make proper animations?
+
 # canvideo README
 
 This is the README for your extension "canvideo". After writing up a brief description, we recommend including the following sections.
